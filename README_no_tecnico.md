@@ -72,9 +72,9 @@
 ### Local (sin Docker)
 
 - Requisitos:
-  - `Python 3.10+`
-  - `Java 17+` (para la API Java)
-  - `Maven` (para arrancar la API Java)
+  - `Python 3.13+`
+  - `Java 21+` (para la API Java)
+  - `Maven 3.9.12+` (para arrancar la API Java)
 
 - Preparar el entorno Python:
   1. Crear entorno virtual e instalar dependencias:
@@ -105,7 +105,7 @@
     ```
   - Si no tienes Maven en PATH, puedes usar:
     ```
-    C:\Tools\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run
+    C:\Tools\apache-maven-3.9.12\bin\mvn.cmd spring-boot:run
     ```
   - La API Java corre en `http://127.0.0.1:8080` y reexpone `POST /predict` y `POST /predict-bulk`.
 
@@ -143,6 +143,33 @@
 
 - En el Dashboard hay una casilla “Solo Telco”. Al activarla, el sistema solo acepta CSVs con el esquema del dataset original de telecomunicaciones.
 - Si subes CSVs de otras fuentes, deja esta casilla desactivada y usa “Normalizar y descargar” para que las columnas se adapten automáticamente.
+
+### CSV flexible y sinónimos
+- Puedes subir CSVs que no sigan el esquema Telco; el sistema los ajusta automáticamente.
+- Reglas principales:
+  - Debe contener al menos 3 de 4 campos clave: `plan`, `tiempo_contrato_meses`, `retrasos_pago`, `uso_mensual`.
+  - Si faltan campos secundarios, se completan con valores por defecto razonables.
+  - Se reconocen sinónimos comunes:
+    - `Subscription Length (Months)` → `tiempo_contrato_meses`
+    - `Daily Watch Time (Hours)` → `uso_mensual`
+    - Variantes de pago (`card`, `credit_card`) → `tipo_pago = tarjeta`
+- Para adaptar tu CSV, usa el botón del Dashboard “Normalizar y descargar” o el endpoint `POST /normalize_csv` con `strict_telco=0`.
+
+### Auto‑reentrenamiento por drift
+- El sistema detecta cambios de distribución en los datos (drift) y puede reentrenar automáticamente.
+- Activación: definir `AUTO_RETRAIN=1` y un umbral `DRIFT_THRESHOLD` (por ejemplo `0.25`) antes de iniciar el Gateway.
+- El entrenamiento guarda un `baseline.json` que sirve de referencia para calcular el drift.
+- Consulta de estado: `GET /drift_status` desde el Gateway.
+
+### A/B testing de retención
+- Permite medir el impacto de campañas (control vs tratamiento).
+- Flujo básico (también disponible desde el Dashboard):
+  - Crear experimento: `POST /ab/create` (ej. nombre y ratio de tratamiento).
+  - Asignar usuarios: `POST /ab/assign` con un CSV que incluya `id`.
+  - Subir resultados: `POST /ab/outcomes` con CSV (`id` y `churn`/`retained`/`revenue`).
+  - Ver reporte: `GET /ab/report` (incluye uplift, z‑score, p‑value).
+  - Listar: `GET /ab/list`.
+- Persistencia: se guarda en `data-science/models/ab_experiments.json`.
 
 ### Ejecutar Data Science sin entorno virtual
 

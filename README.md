@@ -67,12 +67,12 @@ MVP para predicción de cancelación (churn) con modelo de DS y APIs.
 
 ## Requisitos
 
-- Python 3.10+
-- Java 17+
+- Python 3.13+
+- Java 21+
 - Maven (instalación rápida sin administrador):
   - Descarga automática y ajuste de PATH en la sesión:
   ```
-  $mvnVersion = '3.9.6'
+  $mvnVersion = '3.9.12'
   $mvnUrl = "https://archive.apache.org/dist/maven/maven-3/$mvnVersion/binaries/apache-maven-$mvnVersion-bin.zip"
   $zipPath = "$env:TEMP\apache-maven-$mvnVersion-bin.zip"
   $installDir = 'C:\\Tools'
@@ -146,6 +146,7 @@ curl -X POST "http://127.0.0.1:8080/predict?umbral=0.6" \
   - `GET /drift_status` (score y eventos recientes)
   - `GET /dashboard`, `GET /dashboard_history`, `POST /clear_history`
   - A/B testing: `POST /ab/create`, `POST /ab/assign`, `POST /ab/outcomes`, `GET /ab/report`, `GET /ab/list`
+  - `GET /favicon.ico` (favicon embebido para evitar 404)
 - API Java en `http://127.0.0.1:8080`:
   - `POST /predict`, `GET /stats`, `POST /calibrate`, `POST /retrain`, `POST /predict-bulk`
 
@@ -227,7 +228,7 @@ sequenceDiagram
 - API Java (JUnit con MockMvc):
 ```
 cd api-java
-$env:MAVEN_HOME = 'C:\\Tools\\apache-maven-3.9.6'; $env:Path = "$env:MAVEN_HOME\\bin;$env:Path"; mvn -q test
+$env:MAVEN_HOME = 'C:\\Tools\\apache-maven-3.9.12'; $env:Path = "$env:MAVEN_HOME\\bin;$env:Path"; mvn -q test
 ```
 
 ## Orquestación con Docker Compose
@@ -309,6 +310,22 @@ curl -X POST http://127.0.0.1:8080/predict-bulk \
   -F "file=@C:\\Users\\Kabie\\Desktop\\Data\\proyecto-data\\shared\\data\\dataset.csv"
 ```
 
+### CSV flexible y sinónimos
+- El gateway permite CSVs no‑Telco y normaliza encabezados con `POST /normalize_csv`.
+- Reglas:
+  - Requiere al menos 3 de 4 campos núcleo: `plan`, `tiempo_contrato_meses`, `retrasos_pago`, `uso_mensual`.
+  - Si faltan columnas no núcleo, aplica valores por defecto razonables.
+  - Ejemplos de sinónimos admitidos:
+    - `Subscription Length (Months)` → `tiempo_contrato_meses`
+    - `Daily Watch Time (Hours)` → `uso_mensual`
+    - Variantes de pago (`card`, `credit_card`) → `tipo_pago=tarjeta`
+- Ejemplo:
+```
+curl -X POST "http://127.0.0.1:8001/normalize_csv?strict_telco=0" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@C:\\Users\\Kabie\\Desktop\\Data\\proyecto-data\\shared\\data\\dataset.csv"
+```
+
 ## Dashboard web
 
 - Abrir `http://127.0.0.1:8001/dashboard` una vez iniciado el gateway.
@@ -333,6 +350,7 @@ curl -X POST http://127.0.0.1:8080/predict-bulk \
 - El gateway calcula drift por lote: PSI para numéricos y TVD para categóricos.
 - Si `AUTO_RETRAIN=1` y `DRIFT_THRESHOLD` se supera, lanza un reentrenamiento en background y recarga modelos.
 - Consultar estado reciente: `GET /drift_status`.
+- El entrenamiento guarda el baseline en `data-science/models/baseline.json` que el gateway usa para comparar distribuciones.
 - Ejemplos:
   - Iniciar gateway con auto‑retrain: ``AUTO_RETRAIN=1 DRIFT_THRESHOLD=0.25 uvicorn api-gateway.app:app``
   - Ver eventos: ``curl http://127.0.0.1:8001/drift_status``
@@ -345,6 +363,8 @@ curl -X POST http://127.0.0.1:8080/predict-bulk \
   - Subir outcomes (CSV con `id` y `churn`/`retained`/`revenue`): ``curl -X POST "http://127.0.0.1:8001/ab/outcomes?exp_id=123" -F "file=@outcomes.csv"``
   - Generar reporte: ``curl "http://127.0.0.1:8001/ab/report?exp_id=123"``
   - Listar experimentos: ``curl "http://127.0.0.1:8001/ab/list"``
+ - Persistencia: los experimentos se guardan en `data-science/models/ab_experiments.json`.
+ - Reporte incluye uplift, `z-score` y `p-value` para significancia estadística.
 
 ### Calibración y métricas en dashboard
 

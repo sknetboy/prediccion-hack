@@ -1,8 +1,8 @@
 # Guía de ejecución en distintos editores
 
 ## Requisitos
-- `Python 3.10+`
-- `Java 17+`
+- `Python 3.13+`
+- `Java 21+`
 - `Maven` (para API Java)
 - `Docker Desktop` (opcional, para Compose)
 
@@ -29,11 +29,12 @@ $env:AUTO_RETRAIN='1'; $env:DRIFT_THRESHOLD='0.25'; $env:CHURN_THRESHOLD='0.5'
 .\.venv\Scripts\python -m uvicorn api-gateway.app:app --host 127.0.0.1 --port 8001
 ```
 - Abrir dashboard: `http://127.0.0.1:8001/dashboard`
+- Favicon: `GET /favicon.ico` está disponible para evitar 404.
 - Lanzar API Java:
 ```
 mvn spring-boot:run
 # o
-C:\Tools\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run
+C:\Tools\apache-maven-3.9.12\bin\mvn.cmd spring-boot:run
 ```
 
 ## VS Code
@@ -55,13 +56,13 @@ C:\Tools\apache-maven-3.9.6\bin\mvn.cmd spring-boot:run
 
 ## IntelliJ IDEA (API Java)
 - Abrir `api-java/` como proyecto Maven.
-- JDK: seleccionar `Java 17`.
+- JDK: seleccionar `Java 21`.
 - Run: `spring-boot:run` desde Maven o “Run Application”.
 - Para el gateway, usar terminal con los comandos de Python o el plugin Python.
 
 ## Eclipse (Maven)
 - Importar `api-java/` como “Existing Maven Project”.
-- JRE: `Java 17`.
+- JRE: `Java 21`.
 - Run: “Spring Boot App” o `mvn spring-boot:run` en la consola.
 - Gateway y entrenamiento: terminal externa con los comandos de Python.
 
@@ -87,6 +88,29 @@ curl -X POST http://127.0.0.1:8080/predict -H "Content-Type: application/json" -
 ```
 curl -X POST "http://127.0.0.1:8001/predict_bulk?umbral=0.6&explain_top=3&strict_telco=0" -H "Content-Type: multipart/form-data" -F "file=@C:\\Users\\Kabie\\Desktop\\Data\\proyecto-data\\shared\\data\\dataset.csv"
 ```
+- Normalizar CSV:
+```
+curl -X POST "http://127.0.0.1:8001/normalize_csv?strict_telco=0" -H "Content-Type: multipart/form-data" -F "file=@C:\\Users\\Kabie\\Desktop\\Data\\proyecto-data\\shared\\data\\dataset.csv"
+```
+- Calibración y drift:
+```
+curl "http://127.0.0.1:8001/calibration_report?bins=10"
+curl "http://127.0.0.1:8001/drift_status"
+```
+
+## CSV flexible y sinónimos
+- Requiere al menos 3 de 4 campos núcleo: `plan`, `tiempo_contrato_meses`, `retrasos_pago`, `uso_mensual`.
+- Se reconocen sinónimos comunes:
+  - `Subscription Length (Months)` → `tiempo_contrato_meses`
+  - `Daily Watch Time (Hours)` → `uso_mensual`
+  - Variantes de pago (`card`, `credit_card`) → `tipo_pago=tarjeta`
+- Usa `strict_telco=0` para aceptar CSVs no‑Telco y `POST /normalize_csv` para adaptar encabezados.
+
+## A/B testing (Gateway)
+- Endpoints:
+  - `POST /ab/create`, `POST /ab/assign`, `POST /ab/outcomes`, `GET /ab/report`, `GET /ab/list`
+- Persistencia: `data-science/models/ab_experiments.json`.
+- El reporte incluye uplift, z‑score y p‑value.
 
 ## Problemas comunes
 - `net::ERR_CONNECTION_REFUSED`: el gateway no está corriendo o el puerto está bloqueado. Relanza uvicorn y espera “Application startup complete”.
