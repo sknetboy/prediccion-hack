@@ -1,8 +1,8 @@
 # Guía de ejecución en distintos editores
 
 ## Requisitos
-- `Python 3.10+`
-- `Java 17+`
+- `Python 3.13+`
+- `Java 21+`
 - `Maven` (para API Java)
 - `Docker Desktop` (opcional, para Compose)
 
