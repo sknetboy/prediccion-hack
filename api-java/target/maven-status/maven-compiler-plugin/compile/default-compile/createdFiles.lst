@@ -1,0 +1,10 @@
+com\churninsight\controllers\CalibrateController.class
+com\churninsight\controllers\BulkPredictController$1.class
+com\churninsight\controllers\BulkPredictController.class
+com\churninsight\dto\ClientData.class
+com\churninsight\controllers\RetrainController.class
+com\churninsight\dto\PredictResponse.class
+com\churninsight\config\RestTemplateConfig.class
+com\churninsight\controllers\StatsController.class
+com\churninsight\controllers\PredictController.class
+com\churninsight\ChurnInsightApplication.class

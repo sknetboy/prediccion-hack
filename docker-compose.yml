@@ -1,0 +1,17 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8001:8001"
+  api:
+    build:
+      context: .
+      dockerfile: api-java/Dockerfile
+    environment:
+      SPRING_APPLICATION_JSON: '{"python.service.url":"http://gateway:8001/predict","python.service.stats.url":"http://gateway:8001/stats","python.service.calibrate.url":"http://gateway:8001/calibrate_threshold","python.service.retrain.url":"http://gateway:8001/retrain"}'
+    depends_on:
+      - gateway
+    ports:
+      - "8080:8080"

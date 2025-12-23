@@ -1,0 +1,37 @@
+package com.churninsight.controllers;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.match.MockRestRequestMatchers;
+import org.springframework.test.web.client.response.MockRestResponseCreators;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class CalibrateControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Test
+    void testCalibrateForward() throws Exception {
+        MockRestServiceServer server = MockRestServiceServer.createServer(restTemplate);
+        server.expect(MockRestRequestMatchers.requestTo("http://127.0.0.1:8001/calibrate_threshold?modo=f1&beneficio=40.0&costo=10.0"))
+                .andRespond(MockRestResponseCreators.withSuccess("{\"umbral\":0.2,\"modo\":\"f1\",\"metric\":0.5}", MediaType.APPLICATION_JSON));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .post("/calibrate")
+                        .param("modo", "f1")
+                        .param("beneficio", "40")
+                        .param("costo", "10"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.umbral").value(0.2));
+    }
+}

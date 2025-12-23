@@ -1,0 +1,9 @@
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\ChurnInsightApplication.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\config\RestTemplateConfig.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\controllers\BulkPredictController.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\controllers\CalibrateController.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\controllers\PredictController.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\controllers\RetrainController.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\controllers\StatsController.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\dto\ClientData.java
+C:\Users\Kabie\Desktop\Data\proyecto-data\api-java\src\main\java\com\churninsight\dto\PredictResponse.java

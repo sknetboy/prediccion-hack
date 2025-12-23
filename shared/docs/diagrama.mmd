@@ -1,0 +1,66 @@
+flowchart LR
+  A[Cliente / Frontend / Postman] -- JSON --> B(API Java :8080)
+  B -- forward --> C(API Gateway Python :8001)
+  C -- carga --> D[(Modelo joblib)]
+  D -- predicción --> C
+  C -- prevision + probabilidad --> B
+  B -- respuesta --> A
+
+  subgraph Data Science
+    E[Entrenamiento Python] --> D
+    F[(shared/data/dataset.csv)] --> E
+  end
+
+  subgraph Backend
+    B
+  end
+
+  subgraph API Gateway
+    C
+    C -- computa drift --> G{Drift ≥ umbral}
+    G -- sí --> E
+    G -- no --> C
+  end
+
+  subgraph Experimentos A/B
+    H[POST /ab/create]
+    I[POST /ab/assign]
+    J[POST /ab/outcomes]
+    K[GET /ab/report]
+    A --> H
+    A --> I
+    A --> J
+    A --> K
+  end
+
+---
+
+sequenceDiagram
+  participant U as Usuario
+  participant J as API Java (Spring Boot)
+  participant P as Gateway Python (FastAPI)
+  participant M as Modelo (joblib)
+  participant DS as Entrenamiento
+
+  U->>J: POST /predict { JSON cliente }
+  J->>P: POST /predict { JSON cliente }
+  P->>M: Cargar pipeline y predecir
+  M-->>P: { prevision, probabilidad }
+  P-->>J: { prevision, probabilidad }
+  J-->>U: { prevision, probabilidad }
+
+  U->>P: POST /predict_bulk { CSV }
+  P->>P: Normalizar columnas y armonizar valores
+  P->>P: Computar drift y registrar evento
+  alt AUTO_RETRAIN activado y drift ≥ umbral
+    P->>DS: Ejecutar reentrenamiento
+    DS->>M: Guardar nuevo modelo
+    P->>P: Recargar modelos
+  end
+  P-->>U: Lista de resultados y explicaciones
+
+  U->>P: POST /ab/create { nombre, ratio }
+  U->>P: POST /ab/assign { CSV usuarios }
+  U->>P: POST /ab/outcomes { CSV outcomes }
+  U->>P: GET /ab/report { exp_id }
+  P-->>U: { uplift, p_value, métricas }

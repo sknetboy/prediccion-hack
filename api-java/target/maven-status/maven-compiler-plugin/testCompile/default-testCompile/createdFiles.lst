@@ -1,0 +1,5 @@
+com\churninsight\controllers\BulkPredictControllerTest.class
+com\churninsight\controllers\PredictControllerTest.class
+com\churninsight\controllers\RetrainControllerTest.class
+com\churninsight\controllers\StatsControllerTest.class
+com\churninsight\controllers\CalibrateControllerTest.class
